@@ -19,3 +19,4 @@ class ConnectSingletonDB:
     @property
     def connect(self):
         return self._connect
+
