@@ -57,9 +57,10 @@ def edit_empresa(id):
     if not empresa:
         return make_response({'error': '{} não existe'.format(app_name)}, 404)
     # 1 - Buscar a empresa pelo id, se existir, chama o edit
-    nome = data.get('nome')
+    #Seria interessante validar se todos as keys de data pertencem a Empresa
     dao.edit(id, data)
     #TODO - Se tiver enderco no data, atualizar o endereço também, criar a função o dao de endereço
+    # Valiar também se todos os fields que pertencem a endereco existam no modelo
     empresa = dao.get_by_id(id)
     return make_response(empresa, 200)
 
