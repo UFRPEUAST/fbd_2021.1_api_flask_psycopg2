@@ -1,7 +1,9 @@
 from modules.shared.endereco.dao import EnderecoDao
-
+NAME_TABLE_SQL = "EMPRESA"
 _SCRIPT_SQL_INSERT = 'INSERT INTO EMPRESA(nome, cnpj) values(%s, %s) returning id'
 _SCRIPT_SQL_SELECT = 'SELECT * FROM EMPRESA'
+_SCRIPT_SQL_SELECT_BY_ID = 'SELECT * FROM EMPRESA WHERE ID={}'
+_SCRIPT_SQL_UPDATE_BY_ID = 'UPDATE EMPRESA SET {} WHERE ID={}'
 
 
 class EmpresaDao:
@@ -18,16 +20,30 @@ class EmpresaDao:
         empresa.set_id(id)
         return empresa
 
-    def edit(self, empresa):
-        print('Já vai existir o id')
+    def edit(self, id, data_empresa):
+        cursor = self.database.connect.cursor()
+        str = []
+        for key in data_empresa.keys():
+            str.append('{}=%s'.format(key))
+        cursor.execute(_SCRIPT_SQL_UPDATE_BY_ID.format(','.join(str), id), list(data_empresa.values()))
+        self.database.connect.commit()
+        cursor.close()
+        return True
 
     def get_by_id(self, id):
-        print('BUSCAR NO BANCO PARA SABER SE EXISTE UMA EMPRESA COM ESSE ID')
+        empresas = self._get_all_or_by_id(_SCRIPT_SQL_SELECT_BY_ID.format(id))
+        if empresas:
+            return empresas[0]
+        return None
 
     def get_all(self):
+        empresas = self._get_all_or_by_id(_SCRIPT_SQL_SELECT)
+        return empresas
+
+    def _get_all_or_by_id(self, script):
         empresas = []
         cursor = self.database.connect.cursor()
-        cursor.execute(_SCRIPT_SQL_SELECT)
+        cursor.execute(script)
         columns_name = [column[0] for column in cursor.description]
         empresa_cursor = cursor.fetchone()
         while empresa_cursor:

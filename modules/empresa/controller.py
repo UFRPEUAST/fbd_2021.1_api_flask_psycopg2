@@ -16,7 +16,6 @@ dao_endereco = EnderecoDao(database=ConnectSingletonDB())
                    methods=['GET'])
 def get_empresas():
     empresas = dao.get_all()
-    print('empresas', empresas)
     return make_response(jsonify(empresas), 200)
 
 
@@ -29,11 +28,11 @@ def add_empresa():
         # Validação para existir se todos os fields (Nome e CPF)
         # existem na requisição
         VALIDATE_TEMP(data)
+
         empresa = Empresa(nome=data.get('nome'),
                           cnpj=data.get('cnpj'))
         empresa = dao.save(empresa)
         if data.get('cep'):
-            print('OBA, vamos salvar o endereço')
             data.pop('nome')
             data.pop('cnpj')
             endereco = Endereco(**data)
@@ -50,23 +49,29 @@ def add_empresa():
     return make_response({'id': empresa.id}, 201)
 
 
-@app_empresa.route('/{}/<id>/'.format(app_name),
+@app_empresa.route('/{}/<int:id>/'.format(app_name),
                    methods=['PUT'])
 def edit_empresa(id):
     data = request.form.to_dict(flat=True)
-    print('DATA', data)
-    print('ID', id)
-    #1 - Buscar a empresa pelo id, se existir, chama o edit
-    return make_response({}, 201)
+    empresa = dao.get_by_id(id)
+    if not empresa:
+        return make_response({'error': '{} não existe'.format(app_name)}, 404)
+    # 1 - Buscar a empresa pelo id, se existir, chama o edit
+    nome = data.get('nome')
+    dao.edit(id, data)
+    #TODO - Se tiver enderco no data, atualizar o endereço também, criar a função o dao de endereço
+    empresa = dao.get_by_id(id)
+    return make_response(empresa, 200)
 
-@app_empresa.route('/{}/<id>/'.format(app_name),
+
+@app_empresa.route('/{}/<int:id>/'.format(app_name),
                    methods=['GET'])
 def get_empresa_by_id(id):
-    data = request.form.to_dict(flat=True)
-    print('DATA', data)
-    print('ID', id)
-    #1 - Buscar a empresa pelo id, se existir, chama o edit
-    return make_response({}, 201)
+    empresa = dao.get_by_id(id)
+    if not empresa:
+        return make_response({'error': '{} não existe'.format(app_name)}, 404)
+    # 1 - Buscar a empresa pelo id, se existir, chama o edit
+    return make_response(empresa, 201)
 
 
 # TODO - refactory - Depois vamos remover e colocar em uma classe que terá a responsabilidade de validações
